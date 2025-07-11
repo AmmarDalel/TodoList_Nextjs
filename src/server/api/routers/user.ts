@@ -1,17 +1,20 @@
- import { eq } from "drizzle-orm";
- import { z } from "zod";
- 
- import {
-   createTRPCRouter,
-   publicProcedure,
- } from "~/server/api/trpc";
+import { z } from "zod";
+
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { users } from "~/server/db/schema";
- 
- export const userRouter = createTRPCRouter({
-    register: publicProcedure  
-       .input(z.object({ email: z.string() , name: z.string(), password: z.string() , confirmPassword : z.string() } ))
-       .mutation(async ({ ctx, input }) => {
-         const existingUser = await ctx.db.query.users.findFirst({
+
+export const userRouter = createTRPCRouter({
+  register: publicProcedure
+    .input(
+      z.object({
+        email: z.string(),
+        name: z.string(),
+        password: z.string(),
+        confirmPassword: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existingUser = await ctx.db.query.users.findFirst({
         where: (users, { eq }) => eq(users.email, input.email),
       });
 
@@ -28,18 +31,6 @@ import { users } from "~/server/db/schema";
         })
         .returning();
 
-      return newUser[0]; 
-       }),
- 
-  
- });
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+      return newUser[0];
+    }),
+});

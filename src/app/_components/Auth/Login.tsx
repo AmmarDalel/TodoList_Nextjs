@@ -1,83 +1,96 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { Input } from "../../../components/ui/input"
-import { Button } from "../../../components/ui/button"
-import { Label } from "../../../components/ui/label"
-import { Mail, Lock, Loader2 } from "lucide-react"
+import { signIn } from "next-auth/react";
+import { type z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Label } from "~/components/ui/label";
+import { Input } from "~/components/ui/input";
+import { Mail, Lock } from "lucide-react";
+import { loginSchema } from "~/app/Validation/login";
+import { Button } from "~/components/ui/button";
+import { redirect } from "next/navigation";
 
-export function Login({ setError, setSuccess }: { setError: (e: string) => void; setSuccess: (s: string) => void }) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+type LoginInput = z.infer<typeof loginSchema>;
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setSuccess("")
-    setLoading(true)
+export function Login() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
+  const onSubmit = async (data: LoginInput) => {
     const res = await signIn("credentials", {
-      email,
-      password,
+      ...data,
       redirect: false,
-    })
-
-    setLoading(false)
+    });
 
     if (res?.error) {
-      setError("Email ou mot de passe incorrect")
-    } else {
-      setSuccess("Connexion réussie !")
-      router.replace('/TodoList')
+      setError("root", {
+        type: "manual",
+        message: "Email ou mot de passe incorrecte ! ",
+      });
     }
-  }
+
+    redirect("/TodoList");
+  };
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="mx-auto w-full max-w-md space-y-4"
+    >
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Mail className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
           <Input
             id="email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
             className="pl-10"
-            disabled={loading}
+            disabled={isSubmitting}
+            {...register("email")}
           />
         </div>
+        {errors.email && (
+          <p className="text-sm text-red-600">{errors.email.message}</p>
+        )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="password">Mot de passe</Label>
         <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Lock className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
           <Input
             id="password"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             className="pl-10"
-            disabled={loading}
+            disabled={isSubmitting}
+            {...register("password")}
           />
         </div>
+        {errors.password && (
+          <p className="text-sm text-red-600">{errors.password.message}</p>
+        )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Connexion...
-          </>
-        ) : (
-          "Se connecter"
-        )}
+      {errors.root?.message && (
+        <p className="text-center text-sm text-red-600">
+          {errors.root.message}
+        </p>
+      )}
+
+      <Button type="submit" className="w-full">
+        se connecter
       </Button>
     </form>
-  )
+  );
 }

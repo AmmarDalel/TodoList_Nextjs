@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
@@ -8,26 +8,26 @@ import { api } from "~/trpc/react";
 
 export default function TaskForm() {
   const [task, setTask] = useState({ title: "", description: "" });
-
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const canAdd = task.title.trim() !== "" && task.description.trim() !== "";
-
   const utils = api.useContext();
-  const { mutate } = api.tasks.create.useMutation({
-    onSuccess: () => {
-      setSuccessMessage("La tâche a été ajoutée avec succès !");
-      setErrorMessage(null);
-      setTask({ title: "", description: "" }); 
-      utils.tasks.taskslist.invalidate();
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  const successRef = useRef<HTMLParagraphElement>(null);
+
+  const { mutate, isError, error, isSuccess } = api.tasks.create.useMutation({
+    onSuccess: async () => {
+      setTask({ title: "", description: "" });
+      successRef.current?.classList.remove("hidden");
       setTimeout(() => {
-        setSuccessMessage(null);
-      }, 1000);
+        successRef.current?.classList.add("hidden");
+      }, 3000);
+
+      await utils.tasks.taskslist.invalidate();
     },
-    onError: (error) => {
-      setErrorMessage(error.message);
-      setSuccessMessage(null);
+    onError: () => {
+      errorRef.current?.classList.remove("hidden");
+      setTimeout(() => {
+        errorRef.current?.classList.add("hidden");
+      }, 3000);
     },
   });
 
@@ -65,12 +65,20 @@ export default function TaskForm() {
           }}
         />
         <Button onClick={handleAdd} disabled={!canAdd} className="mt-2">
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Ajouter
         </Button>
       </div>
-      {successMessage && <p className="text-green-600 mt-2">{successMessage}</p>}
-      {errorMessage && <p className="text-red-600 mt-2">{errorMessage}</p>}
+      {isSuccess && (
+        <p className="mt-2 text-green-600 duration-3000" ref={successRef}>
+          La tâche a été ajoutée avec succès !
+        </p>
+      )}
+      {isError && (
+        <p className="mt-2 text-red-600" ref={errorRef}>
+          {error?.message}
+        </p>
+      )}
     </div>
   );
 }
