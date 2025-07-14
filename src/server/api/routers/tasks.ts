@@ -1,15 +1,26 @@
+/* ************************************************************************** */
+/*                                Dependencies                                */
+/* ************************************************************************** */
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { tasks } from "~/server/db/schema";
+
+/* ************************************************************************** */
+/*                                Router Definition                           */
+/* ************************************************************************** */
 export const taskRouter = createTRPCRouter({
+  /* ************************************************************************** */
+  /*                                Create Task                               */
+  /* ************************************************************************** */
   create: protectedProcedure
     .input(z.object({ title: z.string(), description: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
+      // Vérification de la présence de l'ID utilisateur
       if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -17,6 +28,7 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
+      // Insertion de la nouvelle tâche en base
       await ctx.db.insert(tasks).values({
         userId,
         title: input.title,
@@ -27,9 +39,13 @@ export const taskRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  /* ************************************************************************** */
+  /*                              Get User Tasks                              */
+  /* ************************************************************************** */
   taskslist: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
+    // Vérification de la session utilisateur
     if (!userId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
@@ -37,6 +53,7 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
+    // Récupération des tâches de l'utilisateur, triées par date de création
     const userTasks = await ctx.db.query.tasks.findMany({
       where: (tasks, { eq }) => eq(tasks.userId, userId),
       orderBy: (tasks, { asc }) => asc(tasks.createdAt),
@@ -45,10 +62,13 @@ export const taskRouter = createTRPCRouter({
     return userTasks ?? [];
   }),
 
+  /* ************************************************************************** */
+  /*                              Delete a Task                               */
+  /* ************************************************************************** */
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      console.log("input : ", input);
+      // Recherche de la tâche par ID
       const task = await ctx.db.query.tasks.findFirst({
         where: (t, { eq }) => eq(t.id, input.id),
       });
@@ -60,6 +80,7 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
+      // Vérification que l'utilisateur est propriétaire de la tâche
       if (task.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -67,13 +88,18 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
+      // Suppression de la tâche
       await ctx.db.delete(tasks).where(eq(tasks.id, input.id));
       return { success: true };
     }),
 
+  /* ************************************************************************** */
+  /*                              Toggle Task Status                          */
+  /* ************************************************************************** */
   check: protectedProcedure
     .input(z.object({ id: z.string(), isDone: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      // Recherche de la tâche à modifier
       const task = await ctx.db.query.tasks.findFirst({
         where: (t, { eq }) => eq(t.id, input.id),
       });
@@ -85,6 +111,7 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
+      // Vérification de la propriété
       if (task.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -92,6 +119,7 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
+      // Mise à jour du statut de la tâche (faite / non faite)
       await ctx.db
         .update(tasks)
         .set({ isDone: input.isDone })
@@ -100,6 +128,9 @@ export const taskRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  /* ************************************************************************** */
+  /*                              Update Task Details                         */
+  /* ************************************************************************** */
   update: protectedProcedure
     .input(
       z.object({
@@ -109,6 +140,7 @@ export const taskRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Recherche de la tâche à mettre à jour
       const task = await ctx.db.query.tasks.findFirst({
         where: (t, { eq }) => eq(t.id, input.id),
       });
@@ -120,6 +152,7 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
+      // Vérification de la propriété
       if (task.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -127,6 +160,7 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
+      // Préparation des données à mettre à jour
       const updateData: Partial<{ title: string; description: string }> = {};
 
       if (input.title !== undefined) updateData.title = input.title;
@@ -140,6 +174,7 @@ export const taskRouter = createTRPCRouter({
         });
       }
 
+      // Mise à jour en base
       await ctx.db.update(tasks).set(updateData).where(eq(tasks.id, input.id));
 
       return { success: true };

@@ -1,9 +1,20 @@
 "use client";
 
-import React from "react";
+/* ************************************************************************** */
+/*                                Dependencies                                */
+/* ************************************************************************** */
+
+//  Auth & Validation
+import { api } from "~/trpc/react";
+import { registerSchema } from "~/app/Validation/register";
+import { type z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// UI Components
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-
+import { Label } from "~/components/ui/label";
 import {
   Card,
   CardContent,
@@ -11,17 +22,25 @@ import {
   CardTitle,
   CardDescription,
 } from "~/components/ui/card";
-import { Label } from "~/components/ui/label";
+
+//  Icons
 import { Loader2, Lock, Mail, User } from "lucide-react";
-import { api } from "~/trpc/react";
-import { registerSchema } from "~/app/Validation/register";
-import type { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
+/* ************************************************************************** */
+/*                                    Types                                   */
+/* ************************************************************************** */
 
 type FormData = z.infer<typeof registerSchema>;
 
+/* ************************************************************************** */
+/*                             Component Definition                           */
+/* ************************************************************************** */
+
 export default function Register() {
+  /* ************************************************************************ */
+  /*                                   Hooks                                  */
+  /* ************************************************************************ */
+
   const {
     register,
     handleSubmit,
@@ -37,19 +56,28 @@ export default function Register() {
     },
   });
 
+  // Mutation TRPC pour enregistrer l'utilisateur
   const registerMutation = api.users.register.useMutation({
     onSuccess: () => {
-      reset();
+      reset(); // Réinitialise le formulaire après succès
     },
   });
+
+  /* ************************************************************************ */
+  /*                                Functions                                 */
+  /* ************************************************************************ */
 
   const onSubmit = async (data: FormData) => {
     try {
       registerMutation.mutate(data);
     } catch (error) {
-      console.error("Erreur lors de l'inscription :");
+      console.error("Erreur lors de l'inscription :", error);
     }
   };
+
+  /* ************************************************************************ */
+  /*                                   Render                               */
+  /* ************************************************************************ */
 
   return (
     <div className="mx-auto max-w-md p-4">
@@ -60,13 +88,14 @@ export default function Register() {
             Inscrivez-vous pour accéder à vos tâches
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-4"
             noValidate
           >
-            {/* Nom */}
+            {/* Champ : Nom complet */}
             <div>
               <Label htmlFor="name">Nom complet</Label>
               <div className="relative">
@@ -84,7 +113,8 @@ export default function Register() {
                 <p className="text-sm text-red-600">{errors.name.message}</p>
               )}
             </div>
-            {/* Email */}
+
+            {/* Champ : Email */}
             <div>
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -102,7 +132,8 @@ export default function Register() {
                 <p className="text-sm text-red-600">{errors.email.message}</p>
               )}
             </div>
-            {/* Password */}
+
+            {/* Champ : Mot de passe */}
             <div>
               <Label htmlFor="password">Mot de passe</Label>
               <div className="relative">
@@ -122,7 +153,8 @@ export default function Register() {
                 </p>
               )}
             </div>
-            {/* Confirm Password */}
+
+            {/* Champ : Confirmation mot de passe */}
             <div>
               <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
               <div className="relative">
@@ -143,6 +175,7 @@ export default function Register() {
               )}
             </div>
 
+            {/* Bouton de soumission */}
             <Button
               type="submit"
               className="w-full"
@@ -157,11 +190,15 @@ export default function Register() {
                 "Créer un compte"
               )}
             </Button>
+
+            {/* Message d'erreur global */}
             {registerMutation.isError && (
               <p className="text-sm text-red-600">
                 {registerMutation.error.message}
               </p>
             )}
+
+            {/* Message de succès */}
             {registerMutation.isSuccess && (
               <p className="text-sm text-green-600">
                 Compte créé avec succès ! Vous pouvez maintenant vous connecter.

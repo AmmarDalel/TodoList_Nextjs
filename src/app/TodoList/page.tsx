@@ -1,15 +1,13 @@
-
-import React from 'react'
-import {  HydrateClient } from '~/trpc/server';
-import Todolist from '../_components/ToDoList/Todolist';
+import React from "react";
+import { HydrateClient } from "~/trpc/server";
+import Todolist from "~/components/ToDoList/Todolist";
 
 async function page() {
-    
   return (
     <HydrateClient>
-         <Todolist/>
+      <Todolist />
     </HydrateClient>
-  )
+  );
 }
 
-export default page
+export default page;

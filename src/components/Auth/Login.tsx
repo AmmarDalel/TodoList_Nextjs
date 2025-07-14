@@ -1,19 +1,42 @@
 "use client";
 
+/* ************************************************************************** */
+/*                                Dependencies                                */
+/* ************************************************************************** */
+
+// Auth & Navigation
 import { signIn } from "next-auth/react";
-import { type z } from "zod";
+import { redirect } from "next/navigation";
+
+// Form & Validation
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { type z } from "zod";
+import { loginSchema } from "~/app/Validation/login";
+
+// UI Components
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
-import { Mail, Lock } from "lucide-react";
-import { loginSchema } from "~/app/Validation/login";
 import { Button } from "~/components/ui/button";
-import { redirect } from "next/navigation";
+
+// Icons
+import { Mail, Lock } from "lucide-react";
+
+/* ************************************************************************** */
+/*                                    Types                                   */
+/* ************************************************************************** */
 
 type LoginInput = z.infer<typeof loginSchema>;
 
+/* ************************************************************************** */
+/*                             Component Definition                           */
+/* ************************************************************************** */
+
 export function Login() {
+  /* ************************************************************************ */
+  /*                                   Hooks                                  */
+  /* ************************************************************************ */
+
   const {
     register,
     handleSubmit,
@@ -27,6 +50,10 @@ export function Login() {
     },
   });
 
+  /* ************************************************************************ */
+  /*                                Functions                                 */
+  /* ************************************************************************ */
+
   const onSubmit = async (data: LoginInput) => {
     const res = await signIn("credentials", {
       ...data,
@@ -36,18 +63,24 @@ export function Login() {
     if (res?.error) {
       setError("root", {
         type: "manual",
-        message: "Email ou mot de passe incorrecte ! ",
+        message: "Email ou mot de passe incorrecte !",
       });
+      return;
     }
 
     redirect("/TodoList");
   };
+
+  /* ************************************************************************ */
+  /*                                   Render                              */
+  /* ************************************************************************ */
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="mx-auto w-full max-w-md space-y-4"
     >
+      {/* Champ : Email */}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <div className="relative">
@@ -65,6 +98,7 @@ export function Login() {
         )}
       </div>
 
+      {/* Champ : Mot de passe */}
       <div className="space-y-2">
         <Label htmlFor="password">Mot de passe</Label>
         <div className="relative">
@@ -82,13 +116,15 @@ export function Login() {
         )}
       </div>
 
+      {/* Erreur globale (login incorrect) */}
       {errors.root?.message && (
         <p className="text-center text-sm text-red-600">
           {errors.root.message}
         </p>
       )}
 
-      <Button type="submit" className="w-full">
+      {/* Bouton de soumission */}
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
         se connecter
       </Button>
     </form>

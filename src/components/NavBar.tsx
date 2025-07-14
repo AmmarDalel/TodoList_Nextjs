@@ -1,13 +1,25 @@
 "use client";
 
+/* ************************************************************************** */
+/*                                Dependencies                                */
+/* ************************************************************************** */
 import { Button } from "~/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
+/* ************************************************************************** */
+/*                             Component Definition                           */
+/* ************************************************************************** */
 export default function NavBar() {
+  /* ************************************************************************** */
+  /*                                   Hooks                                   */
+  /* ************************************************************************** */
   const { data: session } = useSession();
   const userName = session?.user?.name;
 
+  /* ************************************************************************** */
+  /*                                  Render                                   */
+  /* ************************************************************************** */
   return (
     <nav className="supports-[backdrop-filter]:bg-background/60 flex h-16 items-center border-b bg-red-500/95 backdrop-blur">
       <div className="mr-5 ml-auto flex items-center space-x-15">
