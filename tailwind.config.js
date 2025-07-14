@@ -1,4 +1,4 @@
-exports = {
+export default {
   theme: {
     extend: {
       animation: {

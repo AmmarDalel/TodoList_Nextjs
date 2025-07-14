@@ -7,8 +7,8 @@ export const loginSchema = z.object({
 
   password: z
     .string({ required_error: "Le mot de passe est requis" })
-    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
-    .refine(
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  /*.refine(
       (val) =>
         /[a-z]/.test(val) &&
         /[A-Z]/.test(val) &&
@@ -18,7 +18,7 @@ export const loginSchema = z.object({
         message:
           "Le mot de passe doit contenir au moins une lettre minuscule, une lettre majuscule, un chiffre et un caractère spécial",
       },
-    ),
+    ),*/
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
