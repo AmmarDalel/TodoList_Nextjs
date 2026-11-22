@@ -77,6 +77,12 @@ export default function AuthPage() {
           <p>Compte de test : demo@example.com / password</p>
         </div>
       </div>
+      {/* <div
+        className="mt-6 flex w-full items-center text-center text-sm text-gray-500"
+        dangerouslySetInnerHTML={{
+          __html: `<iframe src="http://localhost:3000/api/iframe/carousel/706d5b77-2623-4bda-8a6a-4934072015ed?transitionDuration=5000" scrolling="no"  width="700" height="300" style="border:none;overflow:hidden;"></iframe>`,
+        }}
+      /> */}
     </div>
   );
 }
