@@ -4,6 +4,7 @@
 import { type NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "~/server/db";
+import { users } from "../db/schema";
 
 /* ************************************************************************** */
 /*                            NextAuth Configuration                         */
